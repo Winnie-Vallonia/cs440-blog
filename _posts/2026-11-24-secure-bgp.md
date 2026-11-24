@@ -1,24 +1,27 @@
 ---
 layout: post
-title: "How Secure Are Secure Interdomain Routing Protocols?"
+title: "Passive Data-Plane Telemetry to Mitigate Long-Distance BGP Hijacks"
 date: 2026-11-24
-paper_authors: "Sharon Goldberg, Michael Schapira, Peter Hummon, Jennifer Rexford"
-paper_venue: "SIGCOMM 2010"
-paper_url: "https://doi.org/10.1145/1851182.1851195"
+paper_authors: "Satadal Sengupta, Hyojoon Kim, Daniel Jubas, Maria Apostolaki, Jennifer Rexford"
+paper_venue: "NINeS 2026"
+paper_url: "https://doi.org/10.4230/OASIcs.NINeS.2026.14"
 week: 9
-tags: [bgp, routing-security, interdomain-routing, hijacks]
+tags: [bgp, hijacks, routing-security, data-plane, programmable-switches]
 ---
 
 ## Key Idea
 
-Secure BGP variants like soBGP and S-BGP stop an attacker from lying about paths. But how much does that actually limit them? The authors simulate one bad AS trying to pull in traffic on a real AS map from CAIDA. The obvious attack is announcing the shortest path the protocol won't flag, to every neighbor. Even against S-BGP, that grabs at least 10% of the internet more than 10% of the time.
-And the obvious attack isn't even the best one. Announcing a longer path, exporting to fewer neighbors, or tricking loop detection can pull in more. Finding the best attack is NP-hard.
+An attacker can hide a hijack in BGP, but if they route your traffic through another country, they can't hide the extra distance it travels.
+HiDe runs on a programmable switch at the network edge, passively tracks the minimum RTT of TCP traffic to each /24 prefix, and blocks the prefix when that RTT suddenly jumps past a speed-of-light bound.
+In real hijack tests it caught attacks within half a second, with a false alarm rate under 0.012% on campus traffic.
 
 ## Critique
 
-Everything rests on every AS following the textbook business rules (Gao-Rexford), and real policies are messier. The weird counterexamples come from real topologies, but the authors admit they were hard to find, so I can't tell how common they are.
-What stuck with me is that defensive filtering of stubs protects about as well as S-BGP, but it depends on providers doing unpaid work to protect everyone else.
+Using physics as the signal is convincing because the attacker really can't fake it, and the ethically run hijacks made the results feel real.
+But it only works when the detour is far, so US traffic routed through the UK gets caught while traffic through Canada might not.
+It also only sees TCP and skips noisy prefixes like cellular and WiFi, which leaves out a lot of real traffic.
 
 ## Connections
 
-The big takeaway is that secure BGP limits which paths you announce, not who you announce them to. Sengupta et al. stop trusting the control plane completely. HiDe watches for propagation delay jumping in the data plane, which an attacker can't hide. Rexford is on both papers, 16 years apart.
+Goldberg et al. (the background paper) showed even S-BGP can be gamed and finding the best attack is NP-hard, so HiDe skips that fight and watches the data plane instead.
+It also reminded me of [No Signal to Rule Them All]({{ site.baseurl }}{% post_url 2026-10-14-no-signal %}), where plain RTT held up as well as fancier in-network signals.
